@@ -17,34 +17,55 @@ class HandDetector:  # Defining a class for hand detection
         # Initializing the drawing utilities from Mediapipe
         self.mp_draw = mp.solutions.drawing_utils
 
-    def find_hands(self, img, draw=True):  # Method to find hands in an image
+    def findHands(self, img, draw=True):  # Method to find hands in an image
         # Converting the image to RGB format for Mediapipe processing
         img_rgb = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
         # Processing the image to detect hands
-        results = self.hands.process(img_rgb)
+        self.results = self.hands.process(img_rgb)
         # Checking if hands are detected
-        if results.multi_hand_landmarks:
-            for hand_lms in results.multi_hand_landmarks:
+        if self. results.multi_hand_landmarks:
+            for hand_lms in self.results.multi_hand_landmarks:
                 if draw:
                     # Drawing landmarks on the image if draw parameter is True
                     self.mp_draw.draw_landmarks(img, hand_lms, self.mp_hands.HAND_CONNECTIONS)
+            return img
+        def findPositiion(self, img, handNo = 0, draw = True):
+
+            lmlist = []
+            if self.results.multi_hand_landmarks:
+                myHand = self.results.multi_hand_landmarks[handNo]
+
+
+                for id, lm in enumerate(hand_lms.landmark):
+                    print(id, lm)
+                    h, w, c = img.shape
+                    cx, cy = int(lm.x * w), int(lm. y * h)
+                    print(id, cx, cy)
+                    lmlist.append([id, cx, cy])
+                    if draw:
+                        cv2.circle(img, (cx, cy), 15, (255, 0, 255), cv2.FILLED)
+
+            return lmlist
 
     def main(self):  # Main method to capture video and detect hands
-        p_time = 0  # Initializing previous time variable for FPS calculation
+        pTime = 0  # Initializing previous time variable for FPS calculation
+        cTime = 0
         cap = cv2.VideoCapture(0)  # Capturing video from the default camera
-        # detector = HandDetector()
+        detector = HandDetector()
         while True:  # Running an infinite loop for video capture
             success, img = cap.read()  # Reading a frame from the camera
+            img = detector.findHands(img)
+            findPosition(img)
 
-            if not success:  # Checking if frame reading was successful
-                print("Error: Failed to read frame from camera")  # Printing error message
-                break  # Exiting the loop if frame reading failed
+            #if not success:  # Checking if frame reading was successful
+                #print("Error: Failed to read frame from camera")  # Printing error message
+                #break  # Exiting the loop if frame reading failed
 
-            self.find_hands(img)  # Calling the find_hands method to detect hands in the image
+            #self.findHands(img)  # Calling the find_hands method to detect hands in the image
 
-            c_time = time.time()  # Getting the current time for FPS calculation
-            fps = 1 / (c_time - p_time)  # Calculating frames per second
-            p_time = c_time  # Updating previous time for next iteration
+            cTime = time.time()  # Getting the current time for FPS calculation
+            fps = 1 / (cTime - pTime)  # Calculating frames per second
+            pTime = cTime  # Updating previous time for next iteration
 
             # Displaying the FPS on the image
             cv2.putText(img, f"FPS: {int(fps)}", (10, 70), cv2.FONT_HERSHEY_PLAIN, 3, (255, 0, 255), 3)
